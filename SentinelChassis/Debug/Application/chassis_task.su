@@ -1,0 +1,5 @@
+chassis_task.c:83:6:chassis_task	16	static
+chassis_task.c:121:13:chassis_init	16	static
+chassis_task.c:151:13:chassis_feedback_update	16	static
+chassis_task.c:170:6:chassis_rc_to_control_vector	24	static
+chassis_task.c:215:13:chassis_control_loop	16	static

@@ -1,0 +1,4 @@
+bsp_usart.c:10:6:usart1_tx_dma_init	4	static
+bsp_usart.c:33:6:usart1_tx_dma_enable	16	static
+bsp_usart.c:54:6:usart6_init	24	static
+bsp_usart.c:114:6:usart6_tx_dma_enable	16	static
