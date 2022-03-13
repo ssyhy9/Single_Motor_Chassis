@@ -26,10 +26,10 @@
 //#include "chassis_behaviour.h"
 
 #include "cmsis_os.h"
-
+#include "main.h"
 #include "arm_math.h"
 #include "user_lib.h"
-#include "pid.h"  //sgersgser
+#include "pid.h"
 #include "remote_control.h"
 #include "CAN_receive.h"
 
@@ -52,6 +52,15 @@
 
 //chassis move data
 chassis_motor_t motor_system;
+
+extern TIM_HandleTypeDef htim2;
+
+float32_t cnt;
+float32_t refree_power;
+float32_t real_power;
+
+int16_t current_flag;
+int16_t direction_flag;
 
 //prototype of all functions
 static void chassis_init(chassis_motor_t *chassis_move_init);
@@ -95,9 +104,30 @@ void chassis_task(void *pvParameters)
         //chassis control pid calculate
         chassis_control_loop(&motor_system);
 
+        real_power = motor_system.current * M3508VOLT / 1.8;
+
+    	if(real_power > 40 || real_power < -40)
+    		current_flag = 0;
+    	else
+    		current_flag = 1;
+
+        if(current_flag == 1){
         //send command current to motors via CAN1
         APP_Send_Msg_to_Motor(motor_system.give_current);
        // APP_Send_Msg_to_Motor(1000);
+        }
+
+        if(current_flag == 0 && direction_flag == RIGHT){
+        	APP_Send_Msg_to_Motor(2000);
+        }
+
+        if(current_flag == 0 && direction_flag == STOP){
+        	APP_Send_Msg_to_Motor(0);
+        }
+
+        if(current_flag == 0 && direction_flag == LEFT){
+        	APP_Send_Msg_to_Motor(-2000);
+        }
 
         //OS delay
         vTaskDelay(CHASSIS_CONTROL_TIME_MS);
@@ -122,6 +152,11 @@ static void chassis_init(chassis_motor_t *chassis_move_init)
     {
         return;
     }
+    //Start Timer2
+    HAL_TIM_Base_Start_IT(&htim2);
+
+    current_flag = 1;
+    direction_flag = STOP;
 
     //chassis m3508 motor speed PID
     const static float32_t m3508_speed_pid[3] = {M3508_MOTOR_SPEED_PID_KP, M3508_MOTOR_SPEED_PID_KI, M3508_MOTOR_SPEED_PID_KD};
@@ -202,6 +237,17 @@ void chassis_rc_to_control_vector(chassis_motor_t *chassis_move_rc_to_vector)
     chassis_move_rc_to_vector->speed = M3508_MOTOR_RPM_TO_VECTOR * chassis_move_rc_to_vector->wheel_measure->speed_rpm;
 
     chassis_move_rc_to_vector->speed_set = chassis_move_rc_to_vector->x_set;
+
+	if(chassis_move_rc_to_vector->x_set > 0.2){
+		direction_flag = RIGHT;
+	}
+	if(chassis_move_rc_to_vector->x_set <= 0.2 && chassis_move_rc_to_vector->x_set >= -0.2){
+		direction_flag = STOP;
+	}
+	if(chassis_move_rc_to_vector->x_set < -0.2){
+		direction_flag = LEFT;
+	}
+
 }
 
 /**
@@ -212,14 +258,18 @@ void chassis_rc_to_control_vector(chassis_motor_t *chassis_move_rc_to_vector)
   */
 static void chassis_control_loop(chassis_motor_t *chassis_move_control_loop)
 {
-	//limit the maximum speed of m3508
-//	if (chassis_move_control_loop->speed > MAX_WHEEL_SPEED){
-//		chassis_move_control_loop->speed_set = MAX_WHEEL_SPEED;
-//	}
-	chassis_move_control_loop->current = chassis_move_control_loop->wheel_measure->given_current;
+	chassis_move_control_loop->current = (chassis_move_control_loop->wheel_measure->given_current)/1000.0;
+	chassis_move_control_loop->rpm = chassis_move_control_loop->wheel_measure->speed_rpm;
 
 	//speed-closed-loop of spd_motor
 	chassis_move_control_loop->give_current = 1.5 * (int16_t)PID_calc(&chassis_move_control_loop->m3508_speed_pid, \
 			chassis_move_control_loop->speed, chassis_move_control_loop->speed_set);
+}
+
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+//	cnt++;
+	refree_power = motor_system.current * M3508VOLT / 1.8;
+
 }
 

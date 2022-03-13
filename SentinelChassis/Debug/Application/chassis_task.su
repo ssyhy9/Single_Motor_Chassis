@@ -1,5 +1,6 @@
-chassis_task.c:83:6:chassis_task	16	static
-chassis_task.c:121:13:chassis_init	16	static
-chassis_task.c:151:13:chassis_feedback_update	16	static
-chassis_task.c:170:6:chassis_rc_to_control_vector	24	static
-chassis_task.c:215:13:chassis_control_loop	16	static
+chassis_task.c:90:6:chassis_task	16	static
+chassis_task.c:149:13:chassis_init	16	static
+chassis_task.c:184:13:chassis_feedback_update	16	static
+chassis_task.c:203:6:chassis_rc_to_control_vector	24	static
+chassis_task.c:259:13:chassis_control_loop	16	static
+chassis_task.c:270:6:HAL_TIM_PeriodElapsedCallback	16	static

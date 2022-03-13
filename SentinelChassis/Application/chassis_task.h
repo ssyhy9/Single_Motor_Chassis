@@ -29,6 +29,11 @@
 #include "remote_control.h"
 #include "user_lib.h"
 
+#define M3508VOLT 24
+#define RIGHT 1
+#define STOP 2
+#define LEFT 3
+
 //at the beginning of task ,wait a period
 #define CHASSIS_TASK_INIT_TIME 357
 
@@ -135,7 +140,8 @@ typedef struct
   const motor_measure_t *wheel_measure;
   float32_t speed;							 //unit: m/s
   float32_t speed_set;						 //unit: m/s
-  float32_t current;						//returned current from motor
+  float32_t current;						//(returned current from motor)
+  float32_t rpm;							//(returned rpm from motor)
   float32_t motor_ecd_speed;
   float32_t motor_ecd_speed_set;			 //PID output of angle-closed-loop of ang_motor
   uint16_t offset_ecd;            			 //middle place of the magnetic encoder
